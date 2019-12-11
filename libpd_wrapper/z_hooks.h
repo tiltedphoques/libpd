@@ -14,8 +14,10 @@
 
 #include "z_libpd.h"
 
-// internal hooks
-// do *not* include this file in a user-facing header
+// internal hooks, etc
+// do *not* include this file in a user-facing header, API is subject to change
+
+/* hooks */
 
 // no libpd_printhook as libpd_set_printhook() sets internal sys_printhook
 extern t_libpd_banghook libpd_banghook;
@@ -31,5 +33,13 @@ extern t_libpd_pitchbendhook libpd_pitchbendhook;
 extern t_libpd_aftertouchhook libpd_aftertouchhook;
 extern t_libpd_polyaftertouchhook libpd_polyaftertouchhook;
 extern t_libpd_midibytehook libpd_midibytehook;
+
+/* per-thread shared lock */
+
+/// call sys_lock() only if we can actually the lock
+void sys_lockshared();
+
+/// call sys_unlock() only if we can actually unlock
+void sys_unlockshared();
 
 #endif

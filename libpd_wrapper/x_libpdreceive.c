@@ -62,14 +62,14 @@ static void *libpdreceive_donew(t_symbol *s) {
 // this is exposed in the libpd API so must set the lock
 void *libpdreceive_new(t_symbol *s) {
   t_libpdrec *x;
-  sys_lock();
+  sys_lockshared();
   x = (t_libpdrec *)libpdreceive_donew(s);
-  sys_unlock();
+  sys_unlockshared();
   return x;
 }
 
 void libpdreceive_setup(void) {
-  sys_lock();
+  sys_lockshared();
   libpdrec_class = class_new(gensym("libpd_receive"),
        (t_newmethod)libpdreceive_donew, (t_method)libpdreceive_free,
        sizeof(t_libpdrec), CLASS_DEFAULT, A_DEFSYM, 0);
@@ -79,5 +79,5 @@ void libpdreceive_setup(void) {
   class_addpointer(libpdrec_class, libpdrecpointer);
   class_addlist(libpdrec_class, libpdreclist);
   class_addanything(libpdrec_class, libpdrecanything);
-  sys_unlock();
+  sys_unlockshared();
 }

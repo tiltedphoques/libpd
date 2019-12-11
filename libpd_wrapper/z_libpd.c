@@ -110,40 +110,40 @@ int libpd_init(void) {
 }
 
 void libpd_clear_search_path(void) {
-  sys_lock();
+  sys_lockshared();
   namelist_free(STUFF->st_searchpath);
   STUFF->st_searchpath = NULL;
-  sys_unlock();
+  sys_unlockshared();
 }
 
 void libpd_add_to_search_path(const char *path) {
-  sys_lock();
+  sys_lockshared();
   STUFF->st_searchpath = namelist_append(STUFF->st_searchpath, path, 0);
-  sys_unlock();
+  sys_unlockshared();
 }
   
 void *libpd_openfile(const char *name, const char *dir) {
   void *retval;
-  sys_lock();
+  sys_lockshared();
   pd_globallock();
   retval = (void *)glob_evalfile(NULL, gensym(name), gensym(dir));
   pd_globalunlock();
-  sys_unlock();
+  sys_unlockshared();
   return retval;
 }
 
 void libpd_closefile(void *p) {
-  sys_lock();
+  sys_lockshared();
   pd_free((t_pd *)p);
-  sys_unlock();
+  sys_unlockshared();
 }
 
 int libpd_getdollarzero(void *p) {
-  sys_lock();
+  sys_lockshared();
   pd_pushsym((t_pd *)p);
   int dzero = canvas_getdollarzero();
   pd_popsym((t_pd *)p);
-  sys_unlock();
+  sys_unlockshared();
   return dzero;
 }
 
@@ -157,12 +157,12 @@ int libpd_init_audio(int inChannels, int outChannels, int sampleRate) {
   indev[0] = outdev[0] = DEFAULTAUDIODEV;
   inch[0] = inChannels;
   outch[0] = outChannels;
-  sys_lock();
+  sys_lockshared();
   sys_set_audio_settings(1, indev, 1, inch,
          1, outdev, 1, outch, sampleRate, -1, 1, DEFDACBLKSIZE);
   sched_set_using_audio(SCHED_AUDIO_CALLBACK);
   sys_reopen_audio();
-  sys_unlock();
+  sys_unlockshared();
   return 0;
 }
 
@@ -172,7 +172,7 @@ static const t_sample sample_to_short = SHRT_MAX,
 #define PROCESS(_x, _y) \
   int i, j, k; \
   t_sample *p0, *p1; \
-  sys_lock(); \
+  sys_lockshared(); \
   sys_pollgui(); \
   for (i = 0; i < ticks; i++) { \
     for (j = 0, p0 = STUFF->st_soundin; j < DEFDACBLKSIZE; j++, p0++) { \
@@ -191,7 +191,7 @@ static const t_sample sample_to_short = SHRT_MAX,
       } \
     } \
   } \
-  sys_unlock(); \
+  sys_unlockshared(); \
   return 0;
 
 int libpd_process_short(const int ticks, const short *inBuffer, short *outBuffer) {
@@ -211,7 +211,7 @@ int libpd_process_double(const int ticks, const double *inBuffer, double *outBuf
   size_t n_out = STUFF->st_outchannels * DEFDACBLKSIZE; \
   t_sample *p; \
   size_t i; \
-  sys_lock(); \
+  sys_lockshared(); \
   sys_microsleep(0); \
   for (p = STUFF->st_soundin, i = 0; i < n_in; i++) { \
     *p++ = *inBuffer++ _x; \
@@ -221,7 +221,7 @@ int libpd_process_double(const int ticks, const double *inBuffer, double *outBuf
   for (p = STUFF->st_soundout, i = 0; i < n_out; i++) { \
     *outBuffer++ = *p++ _y; \
   } \
-  sys_unlock(); \
+  sys_unlockshared(); \
   return 0; 
 
 int libpd_process_raw(const float *inBuffer, float *outBuffer) {
@@ -238,22 +238,22 @@ int libpd_process_raw_double(const double *inBuffer, double *outBuffer) {
  
 #define GETARRAY \
   t_garray *garray = (t_garray *) pd_findbyclass(gensym(name), garray_class); \
-  if (!garray) {sys_unlock(); return -1;} \
+  if (!garray) {sys_unlockshared(); return -1;} \
 
 int libpd_arraysize(const char *name) {
   int retval;
-  sys_lock();
+  sys_lockshared();
   GETARRAY
   retval = garray_npoints(garray);
-  sys_unlock();
+  sys_unlockshared();
   return retval;
 }
 
 int libpd_resize_array(const char *name, long size) {
-  sys_lock();
+  sys_lockshared();
   GETARRAY
   garray_resize_long(garray, size);
-  sys_unlock();
+  sys_unlockshared();
   return 0;
 }
 
@@ -265,58 +265,58 @@ int libpd_resize_array(const char *name, long size) {
   for (i = 0; i < n; i++) _x = _y;
 
 int libpd_read_array(float *dest, const char *name, int offset, int n) {
-  sys_lock();
+  sys_lockshared();
   MEMCPY(*dest++, (vec++)->w_float)
-  sys_unlock();
+  sys_unlockshared();
   return 0;
 }
 
 int libpd_write_array(const char *name, int offset, const float *src, int n) {
-  sys_lock();
+  sys_lockshared();
   MEMCPY((vec++)->w_float, *src++)
-  sys_unlock();
+  sys_unlockshared();
   return 0;
 }
 
 int libpd_bang(const char *recv) {
   void *obj;
-  sys_lock();
+  sys_lockshared();
   obj = get_object(recv);
   if (obj == NULL)
   {
-    sys_unlock();
+    sys_unlockshared();
     return -1;
   }
   pd_bang(obj);
-  sys_unlock();
+  sys_unlockshared();
   return 0;
 }
 
 int libpd_float(const char *recv, float x) {
   void *obj;
-  sys_lock();
+  sys_lockshared();
   obj = get_object(recv);
   if (obj == NULL)
   {
-    sys_unlock();
+    sys_unlockshared();
     return -1;
   }
   pd_float(obj, x);
-  sys_unlock();
+  sys_unlockshared();
   return 0;
 }
 
 int libpd_symbol(const char *recv, const char *symbol) {
   void *obj;
-  sys_lock();
+  sys_lockshared();
   obj = get_object(recv);
   if (obj == NULL)
   {
-    sys_unlock();
+    sys_unlockshared();
     return -1;
   }
   pd_symbol(obj, gensym(symbol));
-  sys_unlock();
+  sys_unlockshared();
   return 0;
 }
 
@@ -343,9 +343,9 @@ void libpd_add_float(float x) {
 
 void libpd_add_symbol(const char *symbol) {
   t_symbol *x;
-  sys_lock();
+  sys_lockshared();
   x = gensym(symbol);
-  sys_unlock();
+  sys_unlockshared();
   ADD_ARG(SETSYMBOL);
 }
 
@@ -367,51 +367,51 @@ void libpd_set_symbol(t_atom *a, const char *symbol) {
 
 int libpd_list(const char *recv, int argc, t_atom *argv) {
   t_pd *obj;
-  sys_lock();
+  sys_lockshared();
   obj = get_object(recv);
   if (obj == NULL)
   {
-    sys_unlock();
+    sys_unlockshared();
     return -1;
   }
   pd_list(obj, &s_list, argc, argv);
-  sys_unlock();
+  sys_unlockshared();
   return 0;
 }
 
 int libpd_message(const char *recv, const char *msg, int argc, t_atom *argv) {
   t_pd *obj;
-  sys_lock();
+  sys_lockshared();
   obj = get_object(recv);
   if (obj == NULL)
   {
-    sys_unlock();
+    sys_unlockshared();
     return -1;
   }
   pd_typedmess(obj, gensym(msg), argc, argv);
-  sys_unlock();
+  sys_unlockshared();
   return 0;
 }
 
 void *libpd_bind(const char *recv) {
   t_symbol *x;
-  sys_lock();
+  sys_lockshared();
   x = gensym(recv);
-  sys_unlock();
+  sys_unlockshared();
   return libpdreceive_new(x);
 }
 
 void libpd_unbind(void *p) {
-  sys_lock();
+  sys_lockshared();
   pd_free((t_pd *)p);
-  sys_unlock();
+  sys_unlockshared();
 }
 
 int libpd_exists(const char *recv) {
   int retval;
-  sys_lock();
+  sys_lockshared();
   retval = (get_object(recv) != NULL);
-  sys_unlock();
+  sys_unlockshared();
   return retval;
 }
 
@@ -470,9 +470,9 @@ int libpd_noteon(int channel, int pitch, int velocity) {
   CHECK_CHANNEL
   CHECK_RANGE_7BIT(pitch)
   CHECK_RANGE_7BIT(velocity)
-  sys_lock();
+  sys_lockshared();
   inmidi_noteon(PORT, CHANNEL, pitch, velocity);
-  sys_unlock();
+  sys_unlockshared();
   return 0;
 }
 
@@ -480,18 +480,18 @@ int libpd_controlchange(int channel, int controller, int value) {
   CHECK_CHANNEL
   CHECK_RANGE_7BIT(controller)
   CHECK_RANGE_7BIT(value)
-  sys_lock();
+  sys_lockshared();
   inmidi_controlchange(PORT, CHANNEL, controller, value);
-  sys_unlock();
+  sys_unlockshared();
   return 0;
 }
 
 int libpd_programchange(int channel, int value) {
   CHECK_CHANNEL
   CHECK_RANGE_7BIT(value)
-  sys_lock();
+  sys_lockshared();
   inmidi_programchange(PORT, CHANNEL, value);
-  sys_unlock();
+  sys_unlockshared();
   return 0;
 }
 
@@ -499,18 +499,18 @@ int libpd_programchange(int channel, int value) {
 int libpd_pitchbend(int channel, int value) {
   CHECK_CHANNEL
   if (value < -8192 || value > 8191) return -1;
-  sys_lock();
+  sys_lockshared();
   inmidi_pitchbend(PORT, CHANNEL, value + 8192);
-  sys_unlock();
+  sys_unlockshared();
   return 0;
 }
 
 int libpd_aftertouch(int channel, int value) {
   CHECK_CHANNEL
   CHECK_RANGE_7BIT(value)
-  sys_lock();
+  sys_lockshared();
   inmidi_aftertouch(PORT, CHANNEL, value);
-  sys_unlock();
+  sys_unlockshared();
   return 0;
 }
 
@@ -518,36 +518,36 @@ int libpd_polyaftertouch(int channel, int pitch, int value) {
   CHECK_CHANNEL
   CHECK_RANGE_7BIT(pitch)
   CHECK_RANGE_7BIT(value)
-  sys_lock();
+  sys_lockshared();
   inmidi_polyaftertouch(PORT, CHANNEL, pitch, value);
-  sys_unlock();
+  sys_unlockshared();
   return 0;
 }
 
 int libpd_midibyte(int port, int byte) {
   CHECK_PORT
   CHECK_RANGE_8BIT(byte)
-  sys_lock();
+  sys_lockshared();
   inmidi_byte(port, byte);
-  sys_unlock();
+  sys_unlockshared();
   return 0;
 }
 
 int libpd_sysex(int port, int byte) {
   CHECK_PORT
   CHECK_RANGE_8BIT(byte)
-  sys_lock();
+  sys_lockshared();
   inmidi_sysex(port, byte);
-  sys_unlock();
+  sys_unlockshared();
   return 0;
 }
 
 int libpd_sysrealtime(int port, int byte) {
   CHECK_PORT
   CHECK_RANGE_8BIT(byte)
-  sys_lock();
+  sys_lockshared();
   inmidi_realtimein(port, byte);
-  sys_unlock();
+  sys_unlockshared();
   return 0;
 }
 
@@ -581,22 +581,22 @@ void libpd_set_midibytehook(const t_libpd_midibytehook hook) {
 
 int libpd_start_gui(char *path) {
   int retval;
-  sys_lock();
+  sys_lockshared();
   retval = sys_startgui(path);
-  sys_unlock();
+  sys_unlockshared();
   return retval;
 }
 
 void libpd_stop_gui(void) {
-  sys_lock();
+  sys_lockshared();
   sys_stopgui();
-  sys_unlock();
+  sys_unlockshared();
 }
 
 void libpd_poll_gui(void) {
-  sys_lock();
+  sys_lockshared();
   sys_pollgui();
-  sys_unlock();
+  sys_unlockshared();
 }
 
 t_pdinstance *libpd_new_instance(void) {

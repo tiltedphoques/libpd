@@ -24,3 +24,15 @@ t_libpd_pitchbendhook libpd_pitchbendhook = NULL;
 t_libpd_aftertouchhook libpd_aftertouchhook = NULL;
 t_libpd_polyaftertouchhook libpd_polyaftertouchhook = NULL;
 t_libpd_midibytehook libpd_midibytehook = NULL;
+
+static PERTHREAD int sys_lockcount;
+
+void sys_lockshared() {
+  if (!sys_lockcount++)
+    sys_lock();
+}
+
+void sys_unlockshared() {
+  if (!--sys_lockcount)
+    sys_unlock();
+}
