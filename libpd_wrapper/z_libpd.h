@@ -40,10 +40,17 @@ EXTERN void libpd_add_to_search_path(const char *path);
 
 /// open a patch by filename and parent dir path
 /// returns an opaque patch handle pointer or NULL on failure
-EXTERN void *libpd_openfile(const char *name, const char *dir);
+EXTERN void* libpd_openfile(const char* name, const char* dir);
+
+/// open a patch from a memory buffer
+/// returns an opaque patch handle pointer or NULL on failure
+EXTERN void* libpd_opentext(const char* data, size_t length, const char* name, const char* dir);
 
 /// close a patch by patch handle pointer
-EXTERN void libpd_closefile(void *p);
+EXTERN void libpd_closefile(void* p);
+
+/// close a patch by patch handle pointer
+EXTERN void libpd_closetext(void* p);
 
 /// get the $0 id of the patch handle pointer
 /// returns $0 value or 0 if the patch is non-existent
