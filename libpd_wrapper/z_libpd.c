@@ -122,33 +122,33 @@ void libpd_add_to_search_path(const char *path) {
   sys_unlock();
 }
   
-void* libpd_openfile(const char* name, const char* dir) {
-  void* retval;
+void *libpd_openfile(const char *name, const char *dir) {
+  void *retval;
   sys_lock();
   pd_globallock();
-  retval = (void*)glob_evalfile(NULL, gensym(name), gensym(dir));
+  retval = (void *)glob_evalfile(NULL, gensym(name), gensym(dir));
   pd_globalunlock();
   sys_unlock();
   return retval;
 }
 
-void* libpd_opentext(const char* data, size_t length, const char* name, const char* dir) {
-  void* retval;
+void *libpd_opentext(const char *data, size_t length, const char *name, const char *dir) {
+  void *retval;
   sys_lock();
   pd_globallock();
-  retval = (void*)glob_evaltext(data, length, gensym(name), gensym(dir));
+  retval = (void *)glob_evaltext(data, length, gensym(name), gensym(dir));
   pd_globalunlock();
   sys_unlock();
   return retval;
 }
 
-void libpd_closefile(void* p) {
+void libpd_closefile(void *p) {
   sys_lock();
-  pd_free((t_pd*)p);
+  pd_free((t_pd *)p);
   sys_unlock();
 }
 
-void libpd_closetext(void* p) {
+void libpd_closetext(void *p) {
   libpd_closefile(p);
 }
 
